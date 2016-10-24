@@ -11,13 +11,13 @@ from fleur_ua.tasks.search_category_task import SearchCategoryTask
 from fleur_ua.tasks.one_category_task import OneCategoryTask
 
 
-settings = get_project_settings()
-configure_logging(install_root_handler=False)
-logging.basicConfig(
-    filename='log.txt',
-    format='%(levelname)s: %(message)s',
-    level=logging.WARNING
-)
+# settings = get_project_settings()
+# configure_logging(install_root_handler=False)
+# logging.basicConfig(
+#     filename='log.txt',
+#     format='%(levelname)s: %(message)s',
+#     level=logging.WARNING
+# )
 
 
 while True:
@@ -42,14 +42,16 @@ while True:
     main_flow = uf.Flow("main_flow")
     for item in categories:
         if categories.get(item).get("last_page") == categories.get(item).get("count"):
+            db.connect()
+            db.swap()
+            db.disconnect()
             categories.get(item)["last_page"] = str(0)
         one_category_flow = lf.Flow(item)
         for i in range(int(categories.get(item).get("last_page")), int(categories.get(item).get("count"))):
-            print("append")
             one_category_flow.add(OneCategoryTask(item, i+1))
         main_flow.add(one_category_flow)
 
-    with futurist.ProcessPoolExecutor(max_workers=32) as executor:
+    with futurist.ProcessPoolExecutor(max_workers=4) as executor:
         e = engines.load(main_flow, executor=executor, engine='parallel')
         e.compile()
         e.run()

@@ -11,7 +11,7 @@ class DB():
         self.conn = mysql.connector.connect(user='root', password='root',
                               host='127.0.0.1',
                               database='fleur')
-        self.cur = self.conn.cursor()
+        self.cur = self.conn.cursor(buffered=True)
 
     def disconnect(self):
         self.conn.commit()
@@ -28,7 +28,7 @@ class DB():
                         (name text, price text, category text, sku text, available text)''')
 
     def insert_into_category(self, category_name, url, page_count):
-        self.cur.execute('''SELECT * FROM category WHERE name=%s''', category_name)
+        self.cur.execute('''SELECT * FROM category WHERE name=%s''', (category_name,))
         if self.cur.rowcount == 0:
             self.cur.execute('''INSERT INTO category (name, url, page_count, last_page) values
                             (%s, %s, %s, 0);''', (category_name, url, page_count))
